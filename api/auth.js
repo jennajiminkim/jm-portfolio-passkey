@@ -4,7 +4,10 @@ import {randomUUID,randomBytes,createHmac,timingSafeEqual} from 'node:crypto';
 const origin=process.env.PASSKEY_ORIGIN||'https://jm-portfolio-passkey.vercel.app', rpID=new URL(origin).hostname;
 const path=(kind,id)=>'task8/'+kind+'/'+id+'.json';
 const uid=()=>randomBytes(24).toString('base64url');
-async function read(p){const f=await get(p,{access:'private'});return f?await new Response(f.stream).json():null}
+// Security-critical reads must bypass Vercel Blob's CDN cache: otherwise
+// deleted sessions, consumed challenges, or removed credentials can remain valid
+// for up to 60 seconds after a write or delete.
+async function read(p){const f=await get(p,{access:'private',useCache:false});return f?await new Response(f.stream).json():null}
 async function save(p,data){await put(p,JSON.stringify(data),{access:'private',addRandomSuffix:false,allowOverwrite:true,contentType:'application/json'})}
 function sign(payload){const b=Buffer.from(JSON.stringify(payload)).toString('base64url');const mac=createHmac('sha256',process.env.SESSION_SECRET).update(b).digest('base64url');return b+'.'+mac}
 function unsign(value){if(!value||!value.includes('.')||!process.env.SESSION_SECRET)return null;const [b,mac]=value.split('.');const expected=createHmac('sha256',process.env.SESSION_SECRET).update(b).digest('base64url');if(mac.length!==expected.length||!timingSafeEqual(Buffer.from(mac),Buffer.from(expected)))return null;try{return JSON.parse(Buffer.from(b,'base64url').toString())}catch{return null}}
