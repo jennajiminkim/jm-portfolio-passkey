@@ -68,5 +68,14 @@ E('login').onclick=async()=>{
  finally{b.disabled=false}
 };
 E('logout').onclick=async()=>{await call('logout');E('guest').classList.remove('hidden');E('inside').classList.add('hidden');msg('로그아웃됨: 이전 세션은 무효입니다.')};
-async function refresh(options={}){try{let x=await call('private');E('guest').classList.add('hidden');E('inside').classList.remove('hidden');E('welcome').textContent=x.name+'의 가상 기록';E('entries').replaceChildren(...x.items.map(v=>{let d=document.createElement('div');d.className='box';d.textContent=v.category+' / '+v.title+' — '+v.content;return d}));let keys=await call('list');E('keys').replaceChildren(...keys.credentials.map(c=>{let d=document.createElement('div');d.className='box';let t=document.createElement('span');t.textContent=c.name+' · '+new Date(c.createdAt).toLocaleDateString('ko-KR')+' ';let b=document.createElement('button');b.textContent='삭제';b.onclick=async()=>{if(!confirm('이 패스키를 서버에서 삭제할까요?'))return;try{await call('delete',{credentialId:c.id});refresh()}catch(e){msg(e.message)}};d.append(t,b);return d}));if(!options.preserveNotice)msg('서버가 인증된 계정의 기록만 전송했습니다.');return true}catch(e){E('guest').classList.remove('hidden');E('inside').classList.add('hidden');msg('비공개 접근 차단: '+e.message);return false}}if(location.hash==='#private')toggle(true);
+async function refresh(options={}){try{let x=await call('private');E('guest').classList.add('hidden');E('inside').classList.remove('hidden');E('welcome').textContent=x.name+'의 가상 기록';E('entries').replaceChildren(...x.items.map(v=>{let d=document.createElement('div');d.className='box';d.textContent=v.category+' / '+v.title+' — '+v.content;return d}));let keys=await call('list');E('keys').replaceChildren(...keys.credentials.map(c=>{let d=document.createElement('div');d.className='box';let t=document.createElement('span');t.textContent=c.name+' · '+new Date(c.createdAt).toLocaleDateString('ko-KR')+' ';let b=document.createElement('button');b.textContent='삭제';b.onclick=()=>{
+ if(d.querySelector('.delete-confirm'))return;
+ const panel=document.createElement('div');panel.className='feedback delete-confirm';panel.dataset.state='error';
+ const p=document.createElement('p');p.textContent='「'+c.name+'」 패스키를 서버에서 삭제하시겠습니까? 삭제한 키로는 로그인할 수 없으며 마지막 패스키는 삭제할 수 없습니다.';
+ const yes=document.createElement('button');yes.textContent='삭제 확정';
+ const no=document.createElement('button');no.textContent='취소';
+ yes.onclick=async()=>{yes.disabled=true;no.disabled=true;try{await call('delete',{credentialId:c.id});await refresh({preserveNotice:true});msg('「'+c.name+'」 패스키 삭제 완료. 서버의 현재 패스키 목록을 다시 불러왔습니다.')}catch(e){msg('삭제하지 못했습니다: '+e.message);yes.disabled=false;no.disabled=false}};
+ no.onclick=()=>{panel.remove();b.disabled=false};
+ panel.append(p,yes,no);d.append(panel);b.disabled=true;
+};d.append(t,b);return d}));if(!options.preserveNotice)msg('서버가 인증된 계정의 기록만 전송했습니다.');return true}catch(e){E('guest').classList.remove('hidden');E('inside').classList.add('hidden');msg('비공개 접근 차단: '+e.message);return false}}if(location.hash==='#private')toggle(true);
 </script></html>
