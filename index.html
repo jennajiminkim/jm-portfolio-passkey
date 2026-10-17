@@ -115,7 +115,7 @@ async function runSecurityProbe(type){
      const data=await r.json().catch(()=>({}));
      const pass=r.status===401&&!data.items;
      el.dataset.state=pass?'success':'error';
-     el.textContent=['검사: 쿠키 없는 비공개 자료 요청','요청: POST /api/auth?action=private','인증 쿠키: 전송하지 않음','HTTP 상태: '+r.status+' '+(r.status===401?'Unauthorized':''),'반환된 비공개 자료: '+(data.items?'있음 (검사 실패)':'없음'),'검사 판정: '+(pass?'통과':'예상과 다름')].join('\\n');
+     el.textContent=['검사: 쿠키 없는 비공개 자료 요청','요청: POST /api/auth?action=private','인증 쿠키: 전송하지 않음','HTTP 상태: '+r.status+' '+(r.status===401?'Unauthorized':''),'반환된 비공개 자료: '+(data.items?'있음 (검사 실패)':'없음'),'검사 판정: '+(pass?'통과':'예상과 다름')].join('\n');
    }else{
      const before=await call('list');
      if(before.credentials.length!==1){
@@ -130,7 +130,7 @@ async function runSecurityProbe(type){
      const unchanged=after.credentials.length===1&&after.credentials[0].id===before.credentials[0].id;
      const pass=r.status===409&&unchanged;
      el.dataset.state=pass?'success':'error';
-     el.textContent=['검사: 마지막 패스키 삭제 방어','요청: POST /api/auth?action=delete (존재하지 않는 패스키 ID)','HTTP 상태: '+r.status+' '+(r.status===409?'Conflict':''),'검사 전 패스키 수: '+before.credentials.length,'검사 후 패스키 수: '+after.credentials.length,'같은 기본 패스키 유지: '+(unchanged?'예':'확인 필요'),'검사 판정: '+(pass?'통과':'예상과 다름'),'안내: 실제 패스키 삭제 요청은 하지 않았습니다.'].join('\\n');
+     el.textContent=['검사: 마지막 패스키 삭제 방어','요청: POST /api/auth?action=delete (존재하지 않는 패스키 ID)','HTTP 상태: '+r.status+' '+(r.status===409?'Conflict':''),'검사 전 패스키 수: '+before.credentials.length,'검사 후 패스키 수: '+after.credentials.length,'같은 기본 패스키 유지: '+(unchanged?'예':'확인 필요'),'검사 판정: '+(pass?'통과':'예상과 다름'),'안내: 실제 패스키 삭제 요청은 하지 않았습니다.'].join('\n');
    }
  }catch(e){el.dataset.state='error';el.textContent='검사 미완료: '+e.message}
  finally{btn.disabled=false}
