@@ -1,0 +1,12 @@
+{
+  "name": "jm-portfolio-passkey",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@simplewebauthn/server": "^13.2.2",
+    "@vercel/blob": "^2.0.0"
+  }
+}
