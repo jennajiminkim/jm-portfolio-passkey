@@ -1,13 +1,67 @@
-<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jimin | Passkey</title><style>body{font-family:system-ui;margin:0;background:#fafafa;color:#243049}header{display:flex;justify-content:space-between;align-items:center;background:white;padding:14px 25px;border-bottom:1px solid #dde4f0}button{cursor:pointer;padding:10px 15px;border:1px solid #dae2ee;background:#f4f7fd;color:#2554aa;border-radius:10px}button:hover{background:#e7eefb}#home{width:100%;height:calc(100vh - 70px);border:0}main{max-width:850px;padding:30px;margin:auto}section{padding:25px;background:white;border:1px solid #e2e8f0;border-radius:15px;margin:20px 0}input{padding:12px;border:1px solid #c9d4e4;border-radius:8px}#message{white-space:pre-line;color:#365c9a}.hidden{display:none}.box{padding:14px;background:#f5f8fe;margin:8px 0;border-radius:9px}</style><header><b>jimin. / ACCESS LAB</b><nav><button onclick="toggle(false)">PUBLIC 소개</button> <button onclick="toggle(true)">PRIVATE 🔒</button></nav></header><iframe id="home" src="/portfolio.html" title="기존 공개 자기소개 페이지"></iframe><main id="vault" class="hidden"><p>PRIVATE / PASSKEY</p><h1>나의 비공개 기록실 🔒</h1><p>공개 소개 페이지는 누구나 볼 수 있습니다. 아래의 세 가지 가상 기록은 서버 인증 뒤에만 전송됩니다. 실제 개인정보가 아닙니다.</p><section id="guest"><h2>패스키로 입장</h2><button id="login">패스키 로그인</button><hr><p>처음이라면 과제용 계정 생성 (실명 사용 금지)</p><input id="nick" placeholder="TEST-A"><button id="join">새 계정과 패스키 만들기</button><p>두 계정 테스트는 별도 브라우저 프로필에서 각각 생성하세요.</p></section><section id="inside" class="hidden"><h2 id="welcome"></h2><div id="entries"></div><button id="logout">로그아웃</button><h2>내 패스키 관리</h2><div id="keys"></div><input id="keyname" placeholder="예: 백업 보안 키"><button id="add">두 번째 패스키 등록</button><p>마지막 패스키는 계정 잠김을 막기 위해 삭제할 수 없습니다. 패스키가 0개면 이 과제에는 복구 수단이 없습니다.</p></section><p id="message" role="status"></p></main><script>
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jimin | Passkey</title><style>body{font-family:system-ui;margin:0;background:#fafafa;color:#243049}header{display:flex;justify-content:space-between;align-items:center;background:white;padding:14px 25px;border-bottom:1px solid #dde4f0}button{cursor:pointer;padding:10px 15px;border:1px solid #dae2ee;background:#f4f7fd;color:#2554aa;border-radius:10px}button:hover{background:#e7eefb}#home{width:100%;height:calc(100vh - 70px);border:0}main{max-width:850px;padding:30px;margin:auto}section{padding:25px;background:white;border:1px solid #e2e8f0;border-radius:15px;margin:20px 0}input{padding:12px;border:1px solid #c9d4e4;border-radius:8px}#message{white-space:pre-line;color:#365c9a}.feedback{padding:12px 14px;margin:12px 0;background:#edf5ff;border:1px solid #c7dbf5;border-radius:10px;color:#28539a;font-size:14px;line-height:1.55}.feedback[data-state="error"]{background:#fff0f1;border-color:#f0c5ca;color:#a73748}.feedback[data-state="success"]{background:#f1f8ed;border-color:#c9e6bf;color:#2f6d34}button:disabled{opacity:.55;cursor:wait}.hidden{display:none}.box{padding:14px;background:#f5f8fe;margin:8px 0;border-radius:9px}</style><header><b>jimin. / ACCESS LAB</b><nav><button onclick="toggle(false)">PUBLIC 소개</button> <button onclick="toggle(true)">PRIVATE 🔒</button></nav></header><iframe id="home" src="/portfolio.html" title="기존 공개 자기소개 페이지"></iframe><main id="vault" class="hidden"><p>PRIVATE / PASSKEY</p><h1>나의 비공개 기록실 🔒</h1><p>공개 소개 페이지는 누구나 볼 수 있습니다. 아래의 세 가지 가상 기록은 서버 인증 뒤에만 전송됩니다. 실제 개인정보가 아닙니다.</p><section id="guest"><h2>패스키로 입장</h2><button id="login">패스키 로그인</button><p id="loginNotice" class="feedback hidden" role="status" aria-live="polite"></p><hr><p>처음이라면 과제용 계정 생성 (실명 사용 금지)</p><input id="nick" placeholder="TEST-A"><button id="join">새 계정과 패스키 만들기</button><p id="joinNotice" class="feedback hidden" role="status" aria-live="polite"></p><p>두 계정 테스트는 별도 브라우저 프로필에서 각각 생성하세요.</p></section><section id="inside" class="hidden"><h2 id="welcome"></h2><div id="entries"></div><button id="logout">로그아웃</button><h2>내 패스키 관리</h2><div id="keys"></div><input id="keyname" placeholder="예: 백업 보안 키"><button id="add">두 번째 패스키 등록</button><p id="registerNotice" class="feedback hidden" role="status" aria-live="polite"></p><p>마지막 패스키는 계정 잠김을 막기 위해 삭제할 수 없습니다. 패스키가 0개면 이 과제에는 복구 수단이 없습니다.</p></section><p id="message" role="status"></p></main><script>
 const E=x=>document.getElementById(x),key='task8Account';let account=localStorage.getItem(key);
+function feedback(id,t,state='info'){let e=E(id);e.classList.remove('hidden');e.dataset.state=state;e.textContent=t}
 function toggle(priv){E('home').classList.toggle('hidden',priv);E('vault').classList.toggle('hidden',!priv);if(priv)refresh()}function msg(t){E('message').textContent=t}
 const dec=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-s.length%4)%4)),c=>c.charCodeAt(0));const enc=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 async function call(action,body={}){let r=await fetch('/api/auth?action='+action,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),credentials:'same-origin'}),v=await r.json();if(!r.ok)throw Error(v.error+' · HTTP '+r.status);return v}
 const create=o=>{o.challenge=dec(o.challenge);o.user.id=dec(o.user.id);o.excludeCredentials=(o.excludeCredentials||[]).map(c=>({...c,id:dec(c.id)}));return o},get=o=>{o.challenge=dec(o.challenge);o.allowCredentials=(o.allowCredentials||[]).map(c=>({...c,id:dec(c.id)}));return o};
 function serialize(c){let r=c.response;return {id:c.id,rawId:enc(c.rawId),type:c.type,response:{clientDataJSON:enc(r.clientDataJSON),attestationObject:r.attestationObject?enc(r.attestationObject):undefined,authenticatorData:r.authenticatorData?enc(r.authenticatorData):undefined,signature:r.signature?enc(r.signature):undefined,userHandle:r.userHandle?enc(r.userHandle):null,transports:r.getTransports?.()||[]},clientExtensionResults:c.getClientExtensionResults(),authenticatorAttachment:c.authenticatorAttachment}}
-async function register(fresh){try{let x=await call('register-options',fresh?{create:true,name:E('nick').value}:{name:E('keyname').value});let c=await navigator.credentials.create({publicKey:create(x.options)});if(!c)return;let result=await call('register-verify',{flowId:x.flowId,credential:serialize(c),name:fresh?'기본 패스키':E('keyname').value});if(fresh){account=result.accountId;localStorage.setItem(key,account)}msg('등록 성공');refresh()}catch(e){msg(e.name==='NotAllowedError'?'등록 취소: 서버에 새 패스키가 저장되지 않았습니다.':e.message)}}
+let registering=false;
+async function register(fresh){
+ if(registering)return;
+ const notice=fresh?'joinNotice':'registerNotice',btn=E(fresh?'join':'add');
+ let phase='시작';
+ registering=true;btn.disabled=true;
+ try{
+   phase='서버에 등록 질문 요청';
+   feedback(notice,'① 서버에 새 등록 질문을 요청하고 있습니다.');
+   const x=await call('register-options',fresh?{create:true,name:E('nick').value}:{name:E('keyname').value});
+   phase='기기 등록 승인';
+   feedback(notice,'② 기기에 표시된 패스키 등록을 승인해 주세요. 승인 뒤에는 서버가 공개키를 확인합니다.');
+   const c=await navigator.credentials.create({publicKey:create(x.options)});
+   if(!c)throw Error('기기에서 등록 결과를 돌려주지 않았습니다.');
+   phase='서버에서 공개키 검증 및 저장';
+   feedback(notice,'③ 기기 확인이 끝났습니다. 서버에서 공개키를 검증하고 저장하는 중입니다.');
+   const result=await call('register-verify',{flowId:x.flowId,credential:serialize(c),name:fresh?'기본 패스키':E('keyname').value});
+   if(!result.registered)throw Error('서버에서 등록 완료를 확인하지 못했습니다.');
+   if(fresh){
+     account=result.accountId;localStorage.setItem(key,account);
+     feedback(notice,'등록 완료! 첫 번째 공개키를 서버에 저장했습니다. 이제 「패스키 로그인」 버튼을 눌러 비공개 공간에 들어가세요.','success');
+   }else{
+     phase='등록 목록 갱신';
+     feedback(notice,'④ 저장은 완료되었습니다. 패스키 목록을 갱신하고 있습니다.');
+     const ok=await refresh({preserveNotice:true});
+     const number=result.credentialCount;
+     if(ok){
+       feedback(notice,'두 번째 패스키 등록 완료! 서버에 총 '+number+'개의 공개키가 저장되어 있습니다. 아래 목록에서 새 패스키의 이름과 날짜를 확인하세요.','success');
+     }else{
+       feedback(notice,'공개키는 서버에 저장되었습니다. 다만 목록을 새로 읽지 못했습니다. 페이지 새로고침 후 PRIVATE 탭을 다시 확인하세요.','error');
+     }
+   }
+ }catch(e){
+   let reason=e.name==='NotAllowedError'?'등록이 취소되었거나 기기가 거부했습니다. 패스키 목록을 확인하고 다시 시도하세요.':(e.message||String(e));
+   feedback(notice,'등록을 완료하지 못했습니다.\n멈춘 단계: '+phase+'\n원인: '+reason+'\n현재 패스키가 저장되었는지 아래 목록에서 먼저 확인하세요.','error');
+ }finally{registering=false;btn.disabled=false}
+}
 E('join').onclick=()=>register(true);E('add').onclick=()=>register(false);
-E('login').onclick=async()=>{try{if(!account)throw Error('이 브라우저에 계정 식별자가 없습니다. 신규 등록하세요.');let x=await call('login-options',{accountId:account});let c=await navigator.credentials.get({publicKey:get(x.options)});await call('login-verify',{flowId:x.flowId,credential:serialize(c)});msg('서명 검증 성공');refresh()}catch(e){msg(e.name==='NotAllowedError'?'로그인 취소됨':e.message)}};
+E('login').onclick=async()=>{
+ const b=E('login');b.disabled=true;let phase='로그인 질문 요청';
+ try{
+  feedback('loginNotice','서버에서 새로운 일회용 질문을 가져오고 있습니다.');
+  if(!account)throw Error('현재 브라우저에는 계정 식별자가 없습니다. 새 계정 등록 후 로그인하세요.');
+  const x=await call('login-options',{accountId:account});
+  phase='기기 서명';
+  feedback('loginNotice','기기에서 패스키로 서명해 주세요.');
+  const c=await navigator.credentials.get({publicKey:get(x.options)});
+  if(!c)throw Error('기기에서 인증 결과가 반환되지 않았습니다.');
+  phase='서버에서 서명 검증';
+  feedback('loginNotice','기기 인증이 끝났습니다. 서버에서 공개키로 서명을 확인하고 있습니다.');
+  await call('login-verify',{flowId:x.flowId,credential:serialize(c)});
+  feedback('loginNotice','서명 검증 성공. 비공개 자료를 불러옵니다.','success');
+  await refresh();
+ }catch(e){feedback('loginNotice','로그인을 완료하지 못했습니다 ('+phase+'): '+(e.name==='NotAllowedError'?'기기에서 인증을 취소했습니다.':e.message),'error');msg('로그인 실패. 위 안내를 확인하세요.')}
+ finally{b.disabled=false}
+};
 E('logout').onclick=async()=>{await call('logout');E('guest').classList.remove('hidden');E('inside').classList.add('hidden');msg('로그아웃됨: 이전 세션은 무효입니다.')};
-async function refresh(){try{let x=await call('private');E('guest').classList.add('hidden');E('inside').classList.remove('hidden');E('welcome').textContent=x.name+'의 가상 기록';E('entries').replaceChildren(...x.items.map(v=>{let d=document.createElement('div');d.className='box';d.textContent=v.category+' / '+v.title+' — '+v.content;return d}));let keys=await call('list');E('keys').replaceChildren(...keys.credentials.map(c=>{let d=document.createElement('div');d.className='box';let t=document.createElement('span');t.textContent=c.name+' · '+new Date(c.createdAt).toLocaleDateString('ko-KR')+' ';let b=document.createElement('button');b.textContent='삭제';b.onclick=async()=>{if(!confirm('이 패스키를 서버에서 삭제할까요?'))return;try{await call('delete',{credentialId:c.id});refresh()}catch(e){msg(e.message)}};d.append(t,b);return d}));msg('서버가 인증된 계정의 기록만 전송했습니다.')}catch(e){E('guest').classList.remove('hidden');E('inside').classList.add('hidden');msg('비공개 접근 차단: '+e.message)}}if(location.hash==='#private')toggle(true);
+async function refresh(options={}){try{let x=await call('private');E('guest').classList.add('hidden');E('inside').classList.remove('hidden');E('welcome').textContent=x.name+'의 가상 기록';E('entries').replaceChildren(...x.items.map(v=>{let d=document.createElement('div');d.className='box';d.textContent=v.category+' / '+v.title+' — '+v.content;return d}));let keys=await call('list');E('keys').replaceChildren(...keys.credentials.map(c=>{let d=document.createElement('div');d.className='box';let t=document.createElement('span');t.textContent=c.name+' · '+new Date(c.createdAt).toLocaleDateString('ko-KR')+' ';let b=document.createElement('button');b.textContent='삭제';b.onclick=async()=>{if(!confirm('이 패스키를 서버에서 삭제할까요?'))return;try{await call('delete',{credentialId:c.id});refresh()}catch(e){msg(e.message)}};d.append(t,b);return d}));if(!options.preserveNotice)msg('서버가 인증된 계정의 기록만 전송했습니다.');return true}catch(e){E('guest').classList.remove('hidden');E('inside').classList.add('hidden');msg('비공개 접근 차단: '+e.message);return false}}if(location.hash==='#private')toggle(true);
 </script></html>
