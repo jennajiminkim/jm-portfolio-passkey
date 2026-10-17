@@ -25,6 +25,34 @@ async function handler(req,res){if(req.method==='GET'&&req.query.action==='priva
 if(action==='register-options'){let a;if(p.create){if(typeof p.name!=='string'||!p.name.trim()||p.name.length>32)throw fail(400,'계정 별칭을 입력하세요.');a={id:randomUUID(),name:p.name.trim(),credentials:[],items:[{category:'PROJECT',title:'아카이브 리뉴얼',content:'가상 프로젝트 메모: 11월 화면 구조 정리'},{category:'TARGETS',title:'관심 분야',content:'가상 목록: 클라우드 보안 / 웹 애플리케이션 보안'},{category:'RETROSPECT',title:'이번 주 회고',content:'가상 회고: 작은 실습을 반복하며 이해한 점 기록'}]}}else{a=(await account(req)).a}const options=await generateRegistrationOptions({rpName:'Jimin Private Lab',rpID,userID:Buffer.from(a.id),userName:a.name,attestationType:'none',authenticatorSelection:{residentKey:'preferred',userVerification:'required'},excludeCredentials:a.credentials.map(c=>({id:c.id,transports:c.transports||[]}))});const flowId=uid();await save(path('flows',flowId),{type:'register',challenge:options.challenge,account:a,created:Date.now(),newAccount:!!p.create});return out(res,200,{options,flowId})}
 if(action==='register-verify'){const flow=await read(path('flows',p.flowId));if(!flow||flow.type!=='register'||Date.now()-flow.created>180000)throw fail(400,'등록 질문이 없거나 만료되었습니다.');await del(path('flows',p.flowId));if(!flow.newAccount){const current=await account(req);if(current.a.id!==flow.account.id)throw fail(403,'계정이 다릅니다.');flow.account=current.a}
 const verify=await verifyRegistrationResponse({response:p.credential,expectedChallenge:flow.challenge,expectedOrigin:origin,expectedRPID:rpID,requireUserVerification:true});if(!verify.verified||!verify.registrationInfo)throw fail(403,'패스키 등록 검증에 실패했습니다.');const {credential,credentialDeviceType,credentialBackedUp}=verify.registrationInfo;const a=flow.account;if(a.credentials.some(c=>c.id===credential.id))throw fail(409,'이미 등록된 패스키입니다.');a.credentials.push({id:credential.id,publicKey:Buffer.from(credential.publicKey).toString('base64url'),counter:credential.counter,transports:p.credential?.response?.transports||[],name:String(p.name||'패스키').slice(0,40),createdAt:new Date().toISOString(),credentialDeviceType,credentialBackedUp});await save(path('accounts',a.id),a);return out(res,200,{accountId:a.id,registered:true,credentialCount:a.credentials.length,credentialName:a.credentials.at(-1).name})}
+if(action==='audit-revoked-options'){
+ const {a}=await account(req);
+ // Intentionally omit allowCredentials to let the authenticator offer local credentials,
+ // including a key no longer trusted by this account. Verification uses the normal login route.
+ const options=await generateAuthenticationOptions({rpID,userVerification:'required',allowCredentials:[]});
+ const flowId=uid();
+ await save(path('flows',flowId),{type:'login',challenge:options.challenge,accountId:a.id,created:Date.now(),audit:'revoked-login'});
+ return out(res,200,{flowId,options,test:'revoked-passkey'});
+}
+if(action==='audit-session-start'){
+ const {a,token}=await account(req);
+ const ticket=uid();
+ await save(path('audits',ticket),{type:'old-cookie-replay',token:{sid:token.sid,aid:token.aid,exp:token.exp},created:Date.now()});
+ return out(res,200,{ticket,test:'old-cookie-replay',accountName:a.name});
+}
+if(action==='audit-session-replay'){
+ // A one-use random ticket, never the cookie itself, is sent by the browser after logout.
+ // Recreate the old signed HttpOnly cookie only on the server and call the real session guard.
+ if(typeof p.ticket!=='string'||!/^[-_A-Za-z0-9]{24,80}$/.test(p.ticket))throw fail(400,'검사 티켓이 올바르지 않습니다.');
+ const audit=await read(path('audits',p.ticket));
+ if(!audit||audit.type!=='old-cookie-replay'||Date.now()-audit.created>120000)throw fail(410,'세션 검사 티켓이 없거나 만료되었습니다.');
+ await del(path('audits',p.ticket));
+ let replayStatus=200;
+ try{await account({headers:{cookie:'t8_session='+sign(audit.token)}})}
+ catch(e){replayStatus=e.status||500}
+ const blocked=replayStatus===401;
+ return out(res,blocked?401:500,{test:'old-cookie-replay',replayedOldCookieOnServer:true,originalSessionHTTPStatus:replayStatus,blocked,privateDataReturned:false,message:blocked?'로그아웃 이전 쿠키를 서버에서 재사용했지만 401로 거절되었습니다.':'이전 쿠키의 세션이 남아 있습니다. 확인이 필요합니다.'});
+}
 if(action==='login-options'){
  let a=null;
  if(p.accountId){
