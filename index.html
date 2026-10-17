@@ -106,11 +106,30 @@ async function isolatedProbe(mode){
  const btn=E(mode==='target'?'crossRequest':'spoofRequest');btn.disabled=true;output.textContent='요청 전후 자료 건수를 확인하는 중입니다.';
  try{
    const before=await call('private');
+   const displayedId=E('myAccountId').textContent.trim();
+   const displayedName=E('myAccountName').textContent.trim();
+   if(displayedId&&displayedId!==before.accountId){
+     output.textContent='검사 중단: 화면에는 '+displayedName+' 계정이 표시되어 있지만, 서버 로그인 세션은 '+before.name+' 계정입니다.\\n다른 탭에서 로그인 계정이 변경된 것으로 보입니다.\\n각 TEST 계정을 서로 다른 Chrome 프로필이나 일반/시크릿 창에서 열고 다시 로그인하세요.\\n현재 화면을 서버 세션에 맞춰 새로 고칩니다.';
+     await refresh({preserveNotice:true});
+     return;
+   }
+   if(target===before.accountId){
+     output.textContent='검사 중단: 상대 계정 ID 대신 본인 계정 ID가 입력되었습니다. 반드시 상대 계정 ID를 넣어야 합니다.';
+     return;
+   }
    const name=mode==='target'?'private-target':'private';
    const r=await fetch('/api/auth?action='+name,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(mode==='target'?{targetAccountId:target}:{accountId:target})});
    const data=await r.json().catch(()=>({error:'서버 응답 분석 실패'}));
    const after=await call('private');
+   if(before.accountId!==after.accountId){
+     output.textContent='검사 중단: 요청 중 로그인 세션이 '+before.name+'에서 '+after.name+'(으)로 바뀌었습니다. 결과를 증거로 사용하지 마세요. Chrome 프로필을 분리하세요.';
+     await refresh({preserveNotice:true});
+     return;
+   }
    const expect=mode==='target'?403:200;
+   const noForeignData=mode==='target'&&!data.accountId&&!Array.isArray(data.items);
+   const onlyMyData=mode==='spoof'&&data.accountId===before.accountId&&data.name===before.name&&Array.isArray(data.items)&&data.items.length===before.items.length;
+   const passed=r.status===expect&&before.accountId===after.accountId&&before.items.length===after.items.length&&(mode==='target'?noForeignData:onlyMyData);
    output.textContent=[
      '검사: '+(mode==='target'?'다른 계정 자료 직접 요청':'요청 본문에 다른 계정 ID 대입'),
      '현재 계정: '+before.name,
@@ -119,7 +138,7 @@ async function isolatedProbe(mode){
      '응답 상태: HTTP '+r.status+' '+(r.status===403?'Forbidden':r.status===200?'OK':''),
      '반환 계정: '+(data.name||'(자료 없음)'),
      '내 자료 건수 (검사 전 → 후): '+before.items.length+' → '+after.items.length,
-     '검사 판정: '+(r.status===expect&&(mode==='target'||data.accountId===before.accountId)?'예상한 동작 확인':'예상과 다른 결과: 추가 확인 필요'),
+     '검사 판정: '+(passed?'예상한 동작 확인':'검증 미통과: 세션 또는 응답을 확인하세요'),
      '비공개 본문·세션 쿠키 값은 증거에 포함하지 마세요.'
    ].join('\n');
  }catch(e){output.textContent='검사를 끝내지 못했습니다: '+e.message}
@@ -127,7 +146,7 @@ async function isolatedProbe(mode){
 }
 E('crossRequest').onclick=()=>isolatedProbe('target');
 E('spoofRequest').onclick=()=>isolatedProbe('spoof');
-async function refresh(options={}){try{let x=await call('private');E('guest').classList.add('hidden');E('inside').classList.remove('hidden');E('welcome').textContent=x.name+'의 가상 기록';E('crossTests').classList.remove('hidden');E('myAccountName').textContent=x.name;E('myAccountId').textContent=x.accountId||'';E('myItemCount').textContent=x.items.length;E('entries').replaceChildren(...x.items.map(v=>{let d=document.createElement('div');d.className='box';d.textContent=v.category+' / '+v.title+' — '+v.content;return d}));let keys=await call('list');E('keys').replaceChildren(...keys.credentials.map(c=>{let d=document.createElement('div');d.className='box';let t=document.createElement('span');t.textContent=c.name+' · '+new Date(c.createdAt).toLocaleDateString('ko-KR')+' ';let b=document.createElement('button');b.textContent='삭제';b.onclick=()=>{
+async function refresh(options={}){try{let x=await call('private');const previousId=E('myAccountId').textContent.trim();const previousName=E('myAccountName').textContent.trim();const sessionSwitched=!!previousId&&previousId!==x.accountId;if(sessionSwitched){E('targetAccountId').value='';E('testOutput').textContent='로그인 세션이 '+previousName+'에서 '+x.name+'(으)로 변경되어 이전 검사 결과를 지웠습니다. 계정별로 다른 Chrome 프로필을 사용하세요.';}E('guest').classList.add('hidden');E('inside').classList.remove('hidden');E('welcome').textContent=x.name+'의 가상 기록';E('crossTests').classList.remove('hidden');E('myAccountName').textContent=x.name;E('myAccountId').textContent=x.accountId||'';E('myItemCount').textContent=x.items.length;E('entries').replaceChildren(...x.items.map(v=>{let d=document.createElement('div');d.className='box';d.textContent=v.category+' / '+v.title+' — '+v.content;return d}));let keys=await call('list');E('keys').replaceChildren(...keys.credentials.map(c=>{let d=document.createElement('div');d.className='box';let t=document.createElement('span');t.textContent=c.name+' · '+new Date(c.createdAt).toLocaleDateString('ko-KR')+' ';let b=document.createElement('button');b.textContent='삭제';b.onclick=()=>{
  if(d.querySelector('.delete-confirm'))return;
  const panel=document.createElement('div');panel.className='feedback delete-confirm';panel.dataset.state='error';
  const p=document.createElement('p');p.textContent='「'+c.name+'」 패스키를 서버에서 삭제하시겠습니까? 삭제한 키로는 로그인할 수 없으며 마지막 패스키는 삭제할 수 없습니다.';
@@ -136,5 +155,5 @@ async function refresh(options={}){try{let x=await call('private');E('guest').cl
  yes.onclick=async()=>{yes.disabled=true;no.disabled=true;try{await call('delete',{credentialId:c.id});await refresh({preserveNotice:true});msg('「'+c.name+'」 패스키 삭제 완료. 서버의 현재 패스키 목록을 다시 불러왔습니다.')}catch(e){msg('삭제하지 못했습니다: '+e.message);yes.disabled=false;no.disabled=false}};
  no.onclick=()=>{panel.remove();b.disabled=false};
  panel.append(p,yes,no);d.append(panel);b.disabled=true;
-};d.append(t,b);return d}));if(!options.preserveNotice)msg('서버가 인증된 계정의 기록만 전송했습니다.');return true}catch(e){E('guest').classList.remove('hidden');E('inside').classList.add('hidden');E('crossTests').classList.add('hidden');msg('비공개 접근 차단: '+e.message);return false}}if(location.hash==='#private')toggle(true);
+};d.append(t,b);return d}));if(sessionSwitched){const banner=E('statusBanner');banner.classList.remove('hidden');banner.dataset.state='error';banner.textContent='안내: 다른 탭에서 로그인 세션이 변경되었습니다. 현재 서버가 인증한 계정은 '+x.name+'입니다. 이전 화면의 검사는 무효이며 계정별로 다른 Chrome 프로필을 사용해야 합니다.';}if(!options.preserveNotice)msg('서버가 인증된 계정의 기록만 전송했습니다.');return true}catch(e){E('guest').classList.remove('hidden');E('inside').classList.add('hidden');E('crossTests').classList.add('hidden');msg('비공개 접근 차단: '+e.message);return false}}if(location.hash==='#private')toggle(true);
 </script></html>
