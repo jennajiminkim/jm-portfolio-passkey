@@ -102,7 +102,7 @@ async function isolatedProbe(mode){
      '내 자료 건수 (검사 전 → 후): '+before.items.length+' → '+after.items.length,
      '검사 판정: '+(r.status===expect&&(mode==='target'||data.accountId===before.accountId)?'예상한 동작 확인':'예상과 다른 결과: 추가 확인 필요'),
      '비공개 본문·세션 쿠키 값은 증거에 포함하지 마세요.'
-   ].join('\\n');
+   ].join('\n');
  }catch(e){output.textContent='검사를 끝내지 못했습니다: '+e.message}
  finally{btn.disabled=false}
 }
