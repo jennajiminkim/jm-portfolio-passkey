@@ -1,4 +1,9 @@
-<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jimin | Passkey</title><style>body{font-family:system-ui;margin:0;background:#fafafa;color:#243049}header{display:flex;justify-content:space-between;align-items:center;background:white;padding:14px 25px;border-bottom:1px solid #dde4f0}button{cursor:pointer;padding:10px 15px;border:1px solid #dae2ee;background:#f4f7fd;color:#2554aa;border-radius:10px}button:hover{background:#e7eefb}#home{width:100%;height:calc(100vh - 70px);border:0}main{max-width:850px;padding:30px;margin:auto}section{padding:25px;background:white;border:1px solid #e2e8f0;border-radius:15px;margin:20px 0}input{padding:12px;border:1px solid #c9d4e4;border-radius:8px}#message{white-space:pre-line;color:#365c9a}.feedback{padding:12px 14px;margin:12px 0;background:#edf5ff;border:1px solid #c7dbf5;border-radius:10px;color:#28539a;font-size:14px;line-height:1.55}.feedback[data-state="error"]{background:#fff0f1;border-color:#f0c5ca;color:#a73748}.feedback[data-state="success"]{background:#f1f8ed;border-color:#c9e6bf;color:#2f6d34}button:disabled{opacity:.55;cursor:wait}.hidden{display:none}.box{padding:14px;background:#f5f8fe;margin:8px 0;border-radius:9px}</style><header><b>jimin. / ACCESS LAB</b><nav><button onclick="toggle(false)">PUBLIC 소개</button> <button onclick="toggle(true)">PRIVATE 🔒</button></nav></header><iframe id="home" src="/portfolio.html" title="기존 공개 자기소개 페이지"></iframe><main id="vault" class="hidden"><p>PRIVATE / PASSKEY</p><h1>나의 비공개 기록실 🔒</h1><p id="statusBanner" class="feedback hidden" role="status" aria-live="polite"></p><p>공개 소개 페이지는 누구나 볼 수 있습니다. 아래의 세 가지 가상 기록은 서버 인증 뒤에만 전송됩니다. 실제 개인정보가 아닙니다.</p><section id="guest"><h2>패스키로 입장</h2><p>TEST-A와 TEST-B 중 로그인할 패스키를 직접 선택할 수 있습니다. 이전에 만든 계정을 다시 등록할 필요는 없습니다.</p><button id="login">패스키 선택해서 로그인</button> <button id="loginSaved">마지막 계정으로 로그인</button><p id="loginNotice" class="feedback hidden" role="status" aria-live="polite"></p><hr><p>처음이라면 과제용 계정 생성 (실명 사용 금지)</p><input id="nick" placeholder="TEST-A"><button id="join">새 계정과 패스키 만들기</button><p id="joinNotice" class="feedback hidden" role="status" aria-live="polite"></p><p>두 계정 테스트는 별도 브라우저 프로필에서 각각 생성하세요.</p></section><section id="inside" class="hidden"><h2 id="welcome"></h2><div id="entries"></div><button id="logout">로그아웃</button><h2>내 패스키 관리</h2><div id="keys"></div><p class="box">두 번째 패스키는 <b>다른 저장소 또는 별도 보안 키</b>에 등록해야 합니다. 이름을 바꾸는 것만으로는 새 패스키가 생성되지 않습니다. 등록 창에서 「다른 옵션」 → 「다른 기기 사용」 또는 실제 보안 키를 선택하세요. 두 기기가 같은 iCloud 또는 Google 계정의 패스키를 동기화한다면 별도 키가 아닐 수 있습니다.</p><input id="keyname" placeholder="예: 스마트폰 / USB 보안 키"><button id="add">두 번째 패스키 등록</button><p id="registerNotice" class="feedback hidden" role="status" aria-live="polite"></p><p>마지막 패스키는 계정 잠김을 막기 위해 삭제할 수 없습니다. 패스키가 0개면 이 과제에는 복구 수단이 없습니다.</p></section>
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jimin | Passkey</title><style>body{font-family:system-ui;margin:0;background:#fafafa;color:#243049}header{display:flex;justify-content:space-between;align-items:center;background:white;padding:14px 25px;border-bottom:1px solid #dde4f0}button{cursor:pointer;padding:10px 15px;border:1px solid #dae2ee;background:#f4f7fd;color:#2554aa;border-radius:10px}button:hover{background:#e7eefb}#home{width:100%;height:calc(100vh - 70px);border:0}main{max-width:850px;padding:30px;margin:auto}section{padding:25px;background:white;border:1px solid #e2e8f0;border-radius:15px;margin:20px 0}input{padding:12px;border:1px solid #c9d4e4;border-radius:8px}#message{white-space:pre-line;color:#365c9a}.feedback{padding:12px 14px;margin:12px 0;background:#edf5ff;border:1px solid #c7dbf5;border-radius:10px;color:#28539a;font-size:14px;line-height:1.55}.feedback[data-state="error"]{background:#fff0f1;border-color:#f0c5ca;color:#a73748}.feedback[data-state="success"]{background:#f1f8ed;border-color:#c9e6bf;color:#2f6d34}button:disabled{opacity:.55;cursor:wait}.hidden{display:none}.box{padding:14px;background:#f5f8fe;margin:8px 0;border-radius:9px}</style><header><b>jimin. / ACCESS LAB</b><nav><button onclick="toggle(false)">PUBLIC 소개</button> <button onclick="toggle(true)">PRIVATE 🔒</button></nav></header><iframe id="home" src="/portfolio.html" title="기존 공개 자기소개 페이지"></iframe><main id="vault" class="hidden"><p>PRIVATE / PASSKEY</p><h1>나의 비공개 기록실 🔒</h1><p id="statusBanner" class="feedback hidden" role="status" aria-live="polite"></p><p>공개 소개 페이지는 누구나 볼 수 있습니다. 아래의 세 가지 가상 기록은 서버 인증 뒤에만 전송됩니다. 실제 개인정보가 아닙니다.</p><section id="guest"><h2>패스키로 입장</h2><p>TEST-A와 TEST-B 중 로그인할 패스키를 직접 선택할 수 있습니다. 이전에 만든 계정을 다시 등록할 필요는 없습니다.</p><button id="login">패스키 선택해서 로그인</button> <button id="loginSaved">마지막 계정으로 로그인</button><p id="loginNotice" class="feedback hidden" role="status" aria-live="polite"></p><hr><p>처음이라면 과제용 계정 생성 (실명 사용 금지)</p><input id="nick" placeholder="TEST-A"><button id="join">새 계정과 패스키 만들기</button><p id="joinNotice" class="feedback hidden" role="status" aria-live="polite"></p><p>두 계정 테스트는 별도 브라우저 프로필에서 각각 생성하세요.</p></section><section id="inside" class="hidden"><h2 id="welcome"></h2><div id="entries"></div><button id="logout">로그아웃</button><h2>내 패스키 관리</h2><div id="keys"></div><p class="box">두 번째 패스키는 <b>다른 저장소 또는 별도 보안 키</b>에 등록해야 합니다. 이름을 바꾸는 것만으로는 새 패스키가 생성되지 않습니다. 등록 창에서 「다른 옵션」 → 「다른 기기 사용」 또는 실제 보안 키를 선택하세요. 두 기기가 같은 iCloud 또는 Google 계정의 패스키를 동기화한다면 별도 키가 아닐 수 있습니다.</p><input id="keyname" placeholder="예: 스마트폰 / USB 보안 키"><button id="add">두 번째 패스키 등록</button><p id="registerNotice" class="feedback hidden" role="status" aria-live="polite"></p><p>마지막 패스키는 계정 잠김을 막기 위해 삭제할 수 없습니다. 패스키가 0개면 이 과제에는 복구 수단이 없습니다.</p>
+<h3>추가 보안 검사 · 안전하게 확인</h3>
+<p>아래 검사에서는 실제 패스키를 삭제하거나 계정을 변경하지 않습니다. HTTP 상태와 패스키 개수만 확인합니다.</p>
+<p><button id="anonymousProbe">쿠키 없이 비공개 자료 요청 (401 검사)</button> <button id="lastKeyProbe">마지막 패스키 삭제 방어 (409 검사)</button></p>
+<pre id="securityProbeOutput" class="feedback" role="status" aria-live="polite" style="white-space:pre-wrap;overflow-wrap:anywhere">검사를 실행하면 이곳에 서버 응답 상태가 표시됩니다.</pre>
+</section>
 <section id="crossTests" class="hidden">
 <h2>카드 5 · A/B 접근 차단 검사</h2>
 <p>현재 로그인한 계정의 ID를 상대 테스트 브라우저로 전달하세요. 계정 ID는 공개된 식별용 값일 뿐 패스키나 쿠키가 아닙니다.</p>
@@ -98,6 +103,40 @@ async function signIn(savedAccountOnly=false){
 E('login').onclick=()=>signIn(false);
 E('loginSaved').onclick=()=>signIn(true);
 E('logout').onclick=async()=>{await call('logout');E('guest').classList.remove('hidden');E('inside').classList.add('hidden');E('crossTests').classList.add('hidden');msg('로그아웃됨: 이전 세션은 무효입니다.')};
+async function runSecurityProbe(type){
+ const el=E('securityProbeOutput');
+ const btn=E(type==='anonymous'?'anonymousProbe':'lastKeyProbe');
+ btn.disabled=true;
+ el.dataset.state='info';el.textContent='서버 응답을 확인하고 있습니다.';
+ try{
+   const request={method:'POST',headers:{'Content-Type':'application/json'}};
+   if(type==='anonymous'){
+     const r=await fetch('/api/auth?action=private',{...request,credentials:'omit',body:'{}',cache:'no-store'});
+     const data=await r.json().catch(()=>({}));
+     const pass=r.status===401&&!data.items;
+     el.dataset.state=pass?'success':'error';
+     el.textContent=['검사: 쿠키 없는 비공개 자료 요청','요청: POST /api/auth?action=private','인증 쿠키: 전송하지 않음','HTTP 상태: '+r.status+' '+(r.status===401?'Unauthorized':''),'반환된 비공개 자료: '+(data.items?'있음 (검사 실패)':'없음'),'검사 판정: '+(pass?'통과':'예상과 다름')].join('\\n');
+   }else{
+     const before=await call('list');
+     if(before.credentials.length!==1){
+       el.dataset.state='error';
+       el.textContent='검사 미실행: 현재 계정의 패스키가 '+before.credentials.length+'개입니다. 이 검사는 패스키가 정확히 1개일 때만 실행합니다. 패스키를 삭제하지 않았습니다.';
+       return;
+     }
+     // An impossible credential ID; the server must reject any deletion when only one real key remains.
+     const r=await fetch('/api/auth?action=delete',{...request,credentials:'same-origin',body:JSON.stringify({credentialId:'__not_a_registered_passkey__'}),cache:'no-store'});
+     const data=await r.json().catch(()=>({}));
+     const after=await call('list');
+     const unchanged=after.credentials.length===1&&after.credentials[0].id===before.credentials[0].id;
+     const pass=r.status===409&&unchanged;
+     el.dataset.state=pass?'success':'error';
+     el.textContent=['검사: 마지막 패스키 삭제 방어','요청: POST /api/auth?action=delete (존재하지 않는 패스키 ID)','HTTP 상태: '+r.status+' '+(r.status===409?'Conflict':''),'검사 전 패스키 수: '+before.credentials.length,'검사 후 패스키 수: '+after.credentials.length,'같은 기본 패스키 유지: '+(unchanged?'예':'확인 필요'),'검사 판정: '+(pass?'통과':'예상과 다름'),'안내: 실제 패스키 삭제 요청은 하지 않았습니다.'].join('\\n');
+   }
+ }catch(e){el.dataset.state='error';el.textContent='검사 미완료: '+e.message}
+ finally{btn.disabled=false}
+}
+E('anonymousProbe').onclick=()=>runSecurityProbe('anonymous');
+E('lastKeyProbe').onclick=()=>runSecurityProbe('last');
 E('copyAccountId').onclick=async()=>{let v=E('myAccountId').textContent;if(!v)return;try{await navigator.clipboard.writeText(v);msg('현재 계정 ID를 복사했습니다. 상대 테스트 브라우저에 붙여넣으세요.')}catch(e){msg('복사가 허용되지 않았습니다. 화면의 계정 ID를 직접 선택해 복사하세요.')}};
 async function isolatedProbe(mode){
  const target=E('targetAccountId').value.trim();
