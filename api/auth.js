@@ -56,6 +56,20 @@ if(action==='audit-session-replay'){
  const blocked=replayStatus===401;
  return out(res,blocked?401:500,{test:'old-cookie-replay',replayedOldCookieOnServer:true,originalSessionHTTPStatus:replayStatus,blocked,privateDataReturned:false,message:blocked?'로그아웃 이전 쿠키를 서버에서 재사용했지만 401로 거절되었습니다.':'이전 쿠키의 세션이 남아 있습니다. 확인이 필요합니다.'});
 }
+if(action==='audit-discard-flows'){
+ const {a}=await account(req);
+ const ids=Array.isArray(p.flowIds)?[...new Set(p.flowIds)]:[];
+ if(ids.length===0||ids.length>4||ids.some(id=>typeof id!=='string'||!/^[A-Za-z0-9_-]{32}$/.test(id)))throw fail(400,'검사 질문 ID 목록이 올바르지 않습니다.');
+ let discarded=0;
+ for(const id of ids){
+  const item=await read(path('flows',id));
+  if(!item)continue;
+  const belongsToSession=(item.type==='register'&&!item.newAccount&&item.account?.id===a.id)||(item.type==='login'&&item.accountId===a.id);
+  if(!belongsToSession)throw fail(403,'이 계정의 검사 질문이 아닙니다.');
+  await del(path('flows',id));discarded++;
+ }
+ return out(res,200,{discarded,test:'challenge-comparison-cleanup'});
+}
 if(action==='login-options'){
  let a=null;
  if(p.accountId){
