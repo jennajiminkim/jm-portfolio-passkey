@@ -3,7 +3,13 @@
 <p>아래 검사에서는 실제 패스키를 삭제하거나 계정을 변경하지 않습니다. HTTP 상태와 패스키 개수만 확인합니다.</p>
 <p><button id="anonymousProbe">쿠키 없이 비공개 자료 요청 (401 검사)</button> <button id="lastKeyProbe">마지막 패스키 삭제 방어 (409 검사)</button></p>
 <pre id="securityProbeOutput" class="feedback" role="status" aria-live="polite" style="white-space:pre-wrap;overflow-wrap:anywhere">검사를 실행하면 이곳에 서버 응답 상태가 표시됩니다.</pre>
+<h3>심화 검사 · 삭제된 패스키와 로그아웃 이전 쿠키</h3>
+<p><b>① 먼저</b> 삭제된 Apple 암호 패스키를 선택해 보세요. 인증 창에 Apple 암호가 보이지 않거나 등록된 Google 키만 선택할 수 있으면 검사 미완료로 표시합니다.</p>
+<p><button id="revokedAppleProbe">삭제된 Apple 패스키로 로그인 시도 (403 검사)</button></p>
+<p><b>② 마지막으로</b> 이전 로그인 쿠키 검사 버튼을 누르세요. 이 버튼은 로그아웃한 뒤 서버 내부에서 이전 쿠키를 재사용합니다. 쿠키를 복사하거나 화면에 표시하지 않습니다.</p>
+<p><button id="oldCookieProbe">로그아웃 후 이전 쿠키 재사용 (401 검사)</button></p>
 </section>
+<section id="advancedResults" class="hidden"><h2>심화 검사 결과</h2><pre id="advancedResultsText" class="feedback" role="status" aria-live="polite" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></section>
 <section id="crossTests" class="hidden">
 <h2>카드 5 · A/B 접근 차단 검사</h2>
 <p>현재 로그인한 계정의 ID를 상대 테스트 브라우저로 전달하세요. 계정 ID는 공개된 식별용 값일 뿐 패스키나 쿠키가 아닙니다.</p>
@@ -137,6 +143,53 @@ async function runSecurityProbe(type){
 }
 E('anonymousProbe').onclick=()=>runSecurityProbe('anonymous');
 E('lastKeyProbe').onclick=()=>runSecurityProbe('last');
+function advancedReport(text,passed){
+ E('advancedResults').classList.remove('hidden');
+ const result=E('advancedResultsText');
+ result.dataset.state=passed===true?'success':passed===false?'error':'info';
+ result.textContent=text;
+}
+E('revokedAppleProbe').onclick=async()=>{
+ const btn=E('revokedAppleProbe');btn.disabled=true;
+ advancedReport('Apple 암호의 삭제된 패스키를 선택하세요. 등록된 Google 기본 패스키로는 검증하지 않습니다.',null);
+ try{
+  const keys=await call('list');
+  const x=await call('audit-revoked-options');
+  const credential=await navigator.credentials.get({publicKey:get(x.options)});
+  if(!credential)throw Error('기기에서 인증 결과가 반환되지 않았습니다.');
+  if(keys.credentials.some(k=>k.id===credential.id)){
+   advancedReport('검사 미완료: 삭제된 Apple 패스키가 아니라 현재 서버에 등록된 유효한 패스키를 선택했습니다. 기본 패스키는 서버에 보내지 않았습니다. 다시 시도해 주세요.',null);
+   return;
+  }
+  const r=await fetch('/api/auth?action=login-verify',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({flowId:x.flowId,credential:serialize(credential)})});
+  const data=await r.json().catch(()=>({}));
+  const pass=r.status===403&&typeof data.error==='string'&&data.error.includes('등록되지 않은 패스키')&&!data.authenticated;
+  advancedReport(['검사: 삭제된 패스키의 실제 WebAuthn 응답을 로그인 검증 서버로 전송','요청: POST /api/auth?action=login-verify','HTTP 상태: '+r.status+' '+(r.status===403?'Forbidden':''),'서버 판정: '+(data.error||'(메시지 없음)'),'새로운 로그인 세션 발급: '+(data.authenticated?'예':'아니요'),'검사 판정: '+(pass?'서버에 없는 자격 증명 거절 확인 (403)':'검증 미완료 / 예상과 다른 응답'),'주의: 선택한 패스키가 삭제된 Apple 암호 키인지는 기기의 선택 창에서 직접 확인해야 합니다.'].join('\n'),pass);
+ }catch(e){
+  advancedReport('검사 미완료: '+(e.name==='NotAllowedError'?'기기에서 취소했거나 삭제된 Apple 패스키를 제시하지 못했습니다. Chrome에서 Apple 암호가 보이지 않으면 Safari에서 패스키 선택 로그인으로 시도할 수 있습니다.':e.message),null);
+ }finally{btn.disabled=false}
+};
+E('oldCookieProbe').onclick=async()=>{
+ const btn=E('oldCookieProbe');btn.disabled=true;
+ advancedReport('① 현재 서버에서 로그인 세션을 확인하고 재사용 검사 티켓을 생성하고 있습니다.',null);
+ let loggedOut=false;
+ try{
+  const before=await call('private');
+  const prepared=await call('audit-session-start');
+  advancedReport('② 검사 티켓이 준비됐습니다. 로그아웃하여 서버 세션을 무효화하고 있습니다.',null);
+  await call('logout');
+  loggedOut=true;
+  E('guest').classList.remove('hidden');E('inside').classList.add('hidden');E('crossTests').classList.add('hidden');
+  advancedReport('③ 로그아웃했습니다. 서버에서 이전 HttpOnly 쿠키를 다시 서명·재구성해 실제 세션 검증 경로에 전달합니다.',null);
+  const r=await fetch('/api/auth?action=audit-session-replay',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'omit',body:JSON.stringify({ticket:prepared.ticket}),cache:'no-store'});
+  const data=await r.json().catch(()=>({}));
+  const pass=r.status===401&&data.blocked===true&&data.originalSessionHTTPStatus===401&&data.privateDataReturned===false;
+  advancedReport(['검사: 로그아웃 이전 HttpOnly 세션 쿠키 실제 재사용','검사 전 인증된 계정: '+before.name,'로그아웃: 200 OK','이전 쿠키: 서버 내부에서만 재사용 (화면 및 브라우저 JS에 노출 안 함)','이전 세션 인증 결과: HTTP '+(data.originalSessionHTTPStatus??'(없음)'),'검사 API 응답: HTTP '+r.status,'비공개 자료 반환: '+(data.privateDataReturned?'있음':'없음'),'검사 판정: '+(pass?'통과 — 이전 쿠키 사용이 401로 차단됨':'미통과 또는 검사 오류'),'현재 상태: 로그아웃됨. 다시 입장하려면 패스키로 로그인하세요.'].join('\n'),pass);
+  msg('심화 세션 검사 종료: 로그아웃 상태입니다.');
+ }catch(e){
+  advancedReport('검사 미완료: '+e.message+(loggedOut?'\n로그아웃된 상태이므로 패스키로 다시 로그인하세요.':''),false);
+ }finally{btn.disabled=false}
+};
 E('copyAccountId').onclick=async()=>{let v=E('myAccountId').textContent;if(!v)return;try{await navigator.clipboard.writeText(v);msg('현재 계정 ID를 복사했습니다. 상대 테스트 브라우저에 붙여넣으세요.')}catch(e){msg('복사가 허용되지 않았습니다. 화면의 계정 ID를 직접 선택해 복사하세요.')}};
 async function isolatedProbe(mode){
  const target=E('targetAccountId').value.trim();
