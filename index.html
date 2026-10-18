@@ -32,6 +32,8 @@
 <h3>최종 제출 증거 · 공개키, 등록 취소, 실패한 서명</h3>
 <p>아래 검사는 기존 패스키를 삭제하거나 비공개 기록을 변경하지 않습니다. 공개키는 비밀번호나 개인키가 아니며 화면에는 일부분만 표시됩니다.</p>
 <p><button id="publicKeyEvidence">서버에 저장된 공개키 일부 확인</button> <button id="registrationCancelAudit">등록 중도 취소 · 저장 없음 확인</button></p>
+<p>기기 등록 팝업을 실제로 취소하는 검사입니다. <b>팝업이 나타나면 반드시 ‘취소’를 누르세요.</b> 이 검사에서는 등록 완료 API를 전혀 호출하지 않습니다.</p>
+<p><button id="deviceCancelEvidence">기기 패스키 등록 팝업 취소 실측</button></p>
 <p><button id="invalidSignatureAudit">서명을 일부러 바꾸어 로그인 거절 확인 (기기 승인 1회)</button></p>
 <pre id="finalEvidenceOutput" class="feedback" role="status" aria-live="polite" style="white-space:pre-wrap;overflow-wrap:anywhere">검사 결과는 여기에 표시됩니다. Challenge, 세션 쿠키, 서명 원문은 화면에 표시하지 않습니다.</pre>
 </section><p id="message" role="status"></p></main><script>
@@ -290,6 +292,44 @@ E('registrationCancelAudit').onclick=async()=>{
    box.textContent=['검사: 등록 질문 발급 후 등록 검증 전에 취소','기기 등록 팝업: 실행하지 않음 (서버 취소 경로 검사)','취소 API: POST /api/auth?action=register-cancel','발급된 질문 서버 삭제: '+(canceled.challengeDiscarded?'예':'아니요'),'신규 계정 서버 저장: '+(canceled.newAccountSaved?'예':'아니요'),'공개키 서버 저장: '+(canceled.newCredentialSaved?'예':'아니요'),'기존 계정 패스키 개수: '+before.credentials.length+' → '+after.credentials.length,'기존 패스키 모두 동일: '+(same?'예':'아니요'),'검사 판정: '+(ok?'통과 — 취소 후 신규 등록·저장 없음':'미통과')].join('\n');
  }catch(e){box.dataset.state='error';box.textContent='등록 취소 검사 미완료: '+e.message}
  finally{if(flowId){try{await call('register-cancel',{flowId})}catch{}}btn.disabled=false}
+};
+E('deviceCancelEvidence').onclick=async()=>{
+ const btn=E('deviceCancelEvidence'),box=E('finalEvidenceOutput');btn.disabled=true;
+ let flowId=null,wasCanceled=false;
+ box.dataset.state='info';box.textContent='Mac 패스키 등록 창이 표시되면 반드시 취소를 누르세요. 새로운 공개키는 서버에 저장하지 않습니다.';
+ try{
+   const before=await call('list');
+   const x=await call('register-options',{create:false});
+   flowId=x.flowId;
+   let authenticatorFinished=false;
+   try{
+     const made=await navigator.credentials.create({publicKey:create(x.options)});
+     if(made)authenticatorFinished=true;
+   }catch(e){
+     if(e.name==='NotAllowedError'||e.name==='AbortError'){wasCanceled=true}
+     else throw e;
+   }
+   const abandoned=await call('register-cancel',{flowId});flowId=null;
+   const after=await call('list');
+   const same=before.credentials.length===after.credentials.length&&before.credentials.every((c,i)=>c.id===after.credentials[i].id);
+   const pass=wasCanceled&&abandoned.cancelled&&abandoned.challengeDiscarded&&same&&!authenticatorFinished;
+   box.dataset.state=pass?'success':'error';
+   box.textContent=[
+     '검사: 실제 WebAuthn 등록 팝업 중도 취소',
+     '기기에서 등록 결과 반환: '+(authenticatorFinished?'예 — 사용자가 승인한 것으로 보임':'아니요'),
+     '기기 취소/거부 신호: '+(wasCanceled?'NotAllowedError/AbortError 수신':'없음'),
+     '서버 등록 검증(register-verify) 호출: 안 함',
+     '미사용 질문 삭제: '+(abandoned.challengeDiscarded?'예':'아니요'),
+     '기존 계정 패스키 수: '+before.credentials.length+' → '+after.credentials.length,
+     '기존 공개키 목록 동일: '+(same?'예':'아니요'),
+     '검사 판정: '+(pass?'취소 후 기존 계정·공개키 미변경 확인':'미완료 — 기기 팝업 취소 여부 다시 확인'),
+     '주의: 취소/거부 신호는 시간 초과에도 발생할 수 있으므로 실제 팝업에서 취소를 눌렀는지 직접 확인해 주세요.'
+   ].join('\\n');
+ }catch(e){box.dataset.state='error';box.textContent='기기 팝업 취소 검사를 완료하지 못했습니다: '+e.message;}
+ finally{
+   if(flowId){try{await call('register-cancel',{flowId})}catch{}}
+   btn.disabled=false;
+ }
 };
 E('invalidSignatureAudit').onclick=async()=>{
  const btn=E('invalidSignatureAudit'),box=E('finalEvidenceOutput');
