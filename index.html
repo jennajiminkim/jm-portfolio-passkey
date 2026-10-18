@@ -324,7 +324,7 @@ E('deviceCancelEvidence').onclick=async()=>{
      '기존 공개키 목록 동일: '+(same?'예':'아니요'),
      '검사 판정: '+(pass?'취소 후 기존 계정·공개키 미변경 확인':'미완료 — 기기 팝업 취소 여부 다시 확인'),
      '주의: 취소/거부 신호는 시간 초과에도 발생할 수 있으므로 실제 팝업에서 취소를 눌렀는지 직접 확인해 주세요.'
-   ].join('\\n');
+   ].join('\n');
  }catch(e){box.dataset.state='error';box.textContent='기기 팝업 취소 검사를 완료하지 못했습니다: '+e.message;}
  finally{
    if(flowId){try{await call('register-cancel',{flowId})}catch{}}
